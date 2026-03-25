@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+/* 🔥 REMOVE SCROLLBAR COMPLETELY */
+html, body {
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#050505;
+}
+
+/* Chrome */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Firefox */
+body {
+    scrollbar-width: none;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- YOUR CONTENT WRAPPER -->
+<div style="height:280px; overflow:hidden;">
+    <div id="members" style="padding:8px;color:white;font-family:sans-serif;">
+        Loading...
+    </div>
+</div>
+
+<script>
+const club = "group-a162138be57d83c3500191b84a4b325d";
+
+async function load(){
+try{
+const res = await fetch(`https://api.chess.com/pub/club/${club}/members`);
+const data = await res.json();
+
+// 🔥 BEST SORT AVAILABLE
+let members = (data.weekly || [])
+.sort((a,b)=>b.joined - a.joined)
+.slice(0,5);
+
+let container = document.getElementById("members");
+container.innerHTML = "";
+
+for(let i=0;i<members.length;i++){
+
+let u = members[i];
+let isFirst = i===0;
+
+let div = document.createElement("div");
+
+div.style.cssText = `
+display:flex;
+align-items:center;
+gap:10px;
+padding:10px;
+margin-bottom:6px;
+border-radius:10px;
+background:rgba(0,0,0,0.4);
+border:1px solid rgba(255,60,0,0.2);
+color:#cfcfcf;
+`;
+
+// fetch player info
+try{
+let profile = await fetch(`https://api.chess.com/pub/player/${u.username}`).then(r=>r.json());
+let stats = await fetch(`https://api.chess.com/pub/player/${u.username}/stats`).then(r=>r.json());
+
+let rating = stats.chess_rapid ? stats.chess_rapid.last.rating : "—";
+let online = profile.status==="online";
+let avatar = profile.avatar || "https://www.chess.com/bundles/web/images/noavatar_l.84a92436.gif";
+
+div.innerHTML = `
+<img src="${avatar}" style="width:34px;height:34px;border-radius:50%;">
+<div style="display:flex;flex-direction:column;">
+<b>${u.username}</b>
+<div style="font-size:11px;color:#888;">
+${online?"🟢 Online":"⚫ Offline"} • ${rating}
+</div>
+</div>
+
+${isFirst ? `<span style="
+margin-left:auto;
+background:#ff3c00;
+padding:3px 8px;
+border-radius:6px;
+font-size:10px;
+font-weight:900;
+">NEW</span>` : ""}
+`;
+
+}catch(e){
+div.innerHTML = "Error";
+}
+
+container.appendChild(div);
+}
+
+}catch(e){
+document.getElementById("members").innerHTML = "Failed to load";
+}
+}
+
+load();
+</script>
+
+</body>
+</html>
